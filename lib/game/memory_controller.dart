@@ -68,6 +68,13 @@ class MemoryGameController extends ChangeNotifier {
     await _startLevel(newSequence: true);
   }
 
+  /// Replays the current sequence without changing level or score, e.g.
+  /// after a dialog covered the board during playback.
+  Future<void> replaySequence() async {
+    if (phase == GamePhase.gameOver || sequence.isEmpty) return;
+    await _startLevel(newSequence: false);
+  }
+
   Future<void> _startLevel({required bool newSequence}) async {
     final gen = _generation;
     if (newSequence) {

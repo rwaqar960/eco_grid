@@ -40,6 +40,46 @@ class _MemoryPageState extends State<MemoryPage> {
     _controller.startGame();
   }
 
+  Future<void> _quit() async {
+    if (_controller.phase == GamePhase.gameOver) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    final wasShowing = _controller.phase == GamePhase.showing;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1B2029),
+        title: const Text('Quit this run?'),
+        content: const Text('Your score will still be saved.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep playing'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Quit'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      // The dialog may have covered the pattern playback; show it again.
+      if (wasShowing && mounted) _controller.replaySequence();
+      return;
+    }
+    if (!mounted) return;
+    if (!_scoreSubmitted && _controller.score > 0) {
+      _scoreSubmitted = true;
+      await _store.submit(
+        score: _controller.score,
+        level: _controller.level,
+      );
+    }
+    if (mounted) Navigator.of(context).maybePop();
+  }
+
   @override
   void dispose() {
     _controller.removeListener(_onGameStateChanged);
@@ -59,7 +99,7 @@ class _MemoryPageState extends State<MemoryPage> {
               children: [
                 Column(
                   children: [
-                    _Hud(controller: _controller),
+                    _Hud(controller: _controller, onQuit: _quit),
                     _StatusBanner(controller: _controller),
                     Expanded(
                       child: Center(
@@ -91,18 +131,28 @@ class _MemoryPageState extends State<MemoryPage> {
 }
 
 class _Hud extends StatelessWidget {
-  const _Hud({required this.controller});
+  const _Hud({required this.controller, required this.onQuit});
 
   final MemoryGameController controller;
+  final VoidCallback onQuit;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _pill('Level ${controller.level}'),
+          Row(
+            children: [
+              IconButton(
+                onPressed: onQuit,
+                tooltip: 'Quit',
+                icon: const Icon(Icons.close, color: Colors.white54, size: 24),
+              ),
+              _pill('Level ${controller.level}'),
+            ],
+          ),
           Row(
             children: List.generate(
               MemoryGameController.maxLives,
