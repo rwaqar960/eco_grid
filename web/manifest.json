@@ -1,11 +1,11 @@
 {
-    "name": "stack_sort",
-    "short_name": "stack_sort",
+    "name": "Echo Grid",
+    "short_name": "Echo Grid",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#10131A",
+    "theme_color": "#10131A",
+    "description": "Watch the pattern. Echo it back. A memory sequence game.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
