@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'game/memory_page.dart';
+import 'screens/splash_page.dart';
 
 void main() {
   runApp(const MemoryApp());
@@ -21,7 +21,7 @@ class MemoryApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const MemoryPage(),
+      home: const SplashPage(),
     );
   }
 }

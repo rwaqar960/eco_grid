@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/high_score_store.dart';
 import 'memory_controller.dart';
 
 class MemoryPage extends StatefulWidget {
@@ -11,15 +12,37 @@ class MemoryPage extends StatefulWidget {
 
 class _MemoryPageState extends State<MemoryPage> {
   late final MemoryGameController _controller = MemoryGameController();
+  final HighScoreStore _store = HighScoreStore();
+  bool _scoreSubmitted = false;
+  bool _newBest = false;
 
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_onGameStateChanged);
+    _controller.startGame();
+  }
+
+  Future<void> _onGameStateChanged() async {
+    if (_controller.phase != GamePhase.gameOver || _scoreSubmitted) return;
+    _scoreSubmitted = true;
+    final newBest = await _store.submit(
+      score: _controller.score,
+      level: _controller.level,
+    );
+    if (!mounted) return;
+    setState(() => _newBest = newBest);
+  }
+
+  void _restart() {
+    _scoreSubmitted = false;
+    _newBest = false;
     _controller.startGame();
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onGameStateChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -53,7 +76,11 @@ class _MemoryPageState extends State<MemoryPage> {
                   ],
                 ),
                 if (_controller.phase == GamePhase.gameOver)
-                  _GameOverOverlay(controller: _controller),
+                  _GameOverOverlay(
+                    controller: _controller,
+                    newBest: _newBest,
+                    onRestart: _restart,
+                  ),
               ],
             );
           },
@@ -222,9 +249,15 @@ class _Tile extends StatelessWidget {
 }
 
 class _GameOverOverlay extends StatelessWidget {
-  const _GameOverOverlay({required this.controller});
+  const _GameOverOverlay({
+    required this.controller,
+    required this.newBest,
+    required this.onRestart,
+  });
 
   final MemoryGameController controller;
+  final bool newBest;
+  final VoidCallback onRestart;
 
   @override
   Widget build(BuildContext context) {
@@ -248,14 +281,31 @@ class _GameOverOverlay extends StatelessWidget {
               'Score ${controller.score}  ·  Reached level ${controller.level}',
               style: const TextStyle(color: Colors.white70, fontSize: 17),
             ),
+            if (newBest) ...[
+              const SizedBox(height: 8),
+              const Text(
+                '★ New best score!',
+                style: TextStyle(
+                  color: Colors.amberAccent,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
             const SizedBox(height: 26),
             ElevatedButton(
-              onPressed: controller.startGame,
+              onPressed: onRestart,
               style: ElevatedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
               ),
               child: const Text('Play Again', style: TextStyle(fontSize: 16)),
+            ),
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.home_outlined, size: 20),
+              label: const Text('Home', style: TextStyle(fontSize: 15)),
             ),
           ],
         ),
