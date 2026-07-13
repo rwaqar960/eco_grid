@@ -5,7 +5,7 @@ import '../game/memory_page.dart';
 import '../services/high_score_store.dart';
 
 const _shareText = 'Can you beat my memory in Echo Grid? '
-    'https://github.com/rwaqar960/eco_grid';
+    'Play it here: https://rwaqar960.github.io/eco_grid/';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
